@@ -1,0 +1,87 @@
+const pool = require('../../config/database');
+
+module.exports = {
+    create: (userdata, callBack) => {
+        pool.query(
+            'INSERT INTO users (username, email, password, registration_date) values (?,?,?,?)',
+            [
+                userdata.username,
+                userdata.email,
+                userdata.password,
+                userdata.registration_date
+            ],
+            (error, results, fields) => {
+                if (error) {
+                   return callBack(error);
+                } 
+                return callBack(null, results);
+                },
+        );
+    },
+    getUsers: callBack => {
+        pool.query(
+            'select username, email, registration_date from users',
+            [],
+            (error, results, fields) => {
+                if (error) {
+                return callBack(error);
+            }
+            return callBack(null, results);
+            }
+        );
+    },
+    getUserByUserId: (id, callBack ) => {
+        pool.query(
+            'select username, email, registration_date from users where id = ?',
+            [id],
+            (error, results, fields) => {
+                if (error) {
+                callBack(error);
+            }
+            return callBack(null, results[0]);
+            }
+        );
+    },
+    updateUser: (userdata, callBack) => {
+        pool.query (
+            'update users set username=?, email=?, password=?, registration_date=? where id= ?',
+            [
+                userdata.username,
+                userdata.email,
+                userdata.password,
+                userdata.registration_date,
+                userdata.id
+            ],
+            (error, results, fields) => {
+                if (error) {
+                    callBack(error);
+                }
+                return callBack(null,results);
+                },
+            );
+        },
+        deleteUser: (data, callBack) => {
+            pool.query(
+                'delete from users where id = ?',
+                [data.id],
+                (error, results, fields) => {
+                    if (error) {
+                        callBack(error);
+                    }
+                    return callBack(null, results[0]);
+                }
+            );
+        },
+        getUserByUserEmail: (email, callBack) => {
+            pool.query (
+                'select * from users where email = ?',
+                [email],
+                (error, results, fields) => {
+                    if (error) {
+                        callBack(error);
+                    }
+                    return callBack(null, results[0]);
+                }
+            );
+        }
+    };
