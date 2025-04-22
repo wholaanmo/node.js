@@ -1,0 +1,173 @@
+const { 
+    create, 
+    getUserByUserId, 
+    getUsers, 
+    updateUser, 
+    deleteUser, 
+    getUserByUserEmail
+} = require ("./user.service");
+
+const {genSaltSync, hashSync, compareSync } = require("bcrypt");
+const { sign } = require ("jsonwebtoken");
+module.exports = {
+    createUser: (req, res) => {
+        const body = req.body;
+        const salt = genSaltSync(10);
+        body.password = hashSync(body.password, salt);
+        body.registration_date = new Date();
+        create (body, (err, results) => {
+            if (err) {
+                console.log(err);
+            return res.status(500).json({
+                success: 0,
+                message: "Database connection error"
+
+            });
+        }
+        return res.status(200).json ({
+            success: 1,
+            data: results
+        });
+    });
+    },
+    getUserByUserId: (req, res) => {
+        const id =req.params.id;
+        getUserByUserId(id, (err, results) => {
+            if (err) {
+                console.log(err);
+                return false;
+            }
+            if (!results) {
+                return res.json({
+                    success: 0,
+                    message: "Record not Found"
+                });
+            }
+            return res.json ({
+                success: 1,
+                data: results
+            });
+        });
+    },
+    getUsers: (req, res) => {
+        getUsers ((err, results) => {
+            if (err) {
+                console.log(err);
+                return false;
+            }
+                return res.json ({
+                    success: 1,
+                    data: results
+                });
+            });
+        },
+        updateUsers: (req, res) => {
+            const body = req.body;
+            const id = body.id;
+
+            if (!id) {
+                return res.status(400).json({
+                    success: 0,
+                    message: "User ID is required"
+                });
+            }
+
+                // Get existing user
+    getUserByUserId(id, (err, user) => {
+        if (err || !user) {
+            console.log(err);
+            return res.status(404).json({
+                success: 0,
+                message: "User not found"
+            });
+        }
+
+            if (body.password) {
+                const salt = genSaltSync(10); 
+                body.password = hashSync (body.password, salt);
+            }  else {
+                body.password = user.password;
+            }
+
+            body.registration_date = body.registration_date || user.registration_date;
+
+            updateUser (body, (err, results) => {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json({
+                        success: 0,
+                        message: "Database error"
+                });
+            }
+            if (!results || results.affectedRows === 0) {
+                    return res.json ({
+                        success:0, 
+                        message: "Failed to update user or user not found"
+                    });
+                }
+                return res.json ({
+                    success: 1,
+                    message: "updated successfully"
+                });
+            });
+        });
+        },
+        deleteUser: (req, res) => {
+            const id = req.params.id;
+
+            deleteUser (id, (err, results) => {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json({
+                        success: 0,
+                        message: "Database error"
+                });
+            }
+            if (!results || results.affectedRows === 0) {
+                    return res.json({
+                        success: 0,
+                        message: "User not Found"
+                    });
+                }
+                return res.json ({
+                    success: 1,
+                    message: "User deleted successfully"
+                });
+            });
+        },
+        login: (req, res) => {
+            const body = req.body;
+            getUserByUserEmail (body.email, (err, results) => {
+                if (err) {
+                    console.log (err);
+                    return res.status(500).json({
+                        success: 0,
+                        message: "Database error"
+                });
+            }
+                if (!results) {
+                    return res.json ({
+                        success: 0,
+                        message: "Invalid email or password"
+                    });
+                }
+                const result = compareSync(body.password, results.password);
+                if (result) {
+                    results.password = undefined;
+                    const jsontoken = sign({ result: results }, "qwe1234", {
+                        expiresIn: "1h"
+                    });
+                    return res.json({
+                        success: 1,
+                        message: "login successfully",
+                        token: jsontoken
+                    });
+                } else {
+                    return res.json ({
+                        success: 0,
+                        message: "Invalid email or password"
+                    });
+                }
+            });
+        },
+    };
