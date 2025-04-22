@@ -60,13 +60,13 @@ module.exports = {
                 },
             );
         },
-        deleteUser: (data, callBack) => {
+        deleteUser: (id, callBack) => {
             pool.query(
-                'delete from users where id = ?',
-                [data.id],
+                'DELETE FROM users WHERE id = ?',
+                [id],
                 (error, results, fields) => {
                     if (error) {
-                        callBack(error);
+                        return callBack(error);
                     }
                     return callBack(null, results[0]);
                 }
