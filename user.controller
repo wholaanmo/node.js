@@ -63,17 +63,22 @@ module.exports = {
         },
         updateUsers: (req, res) => {
             const body = req.body;
-            const salt = genSaltSync(10); 
-            body.password = hashSync (body.password, salt);
+            if (body.password) {
+                const salt = genSaltSync(10); 
+                body.password = hashSync (body.password, salt);
+            }
             updateUser (body, (err, results) => {
                 if (err) {
                     console.log(err);
-                    return false;
-                }
-                if (!results) {
+                    return res.status(500).json({
+                        success: 0,
+                        message: "Database error"
+                });
+            }
+            if (!results || results.affectedRows === 0) {
                     return res.json ({
                         success:0, 
-                        message: "Failed to update user"
+                        message: "Failed to update user or user not found"
                     });
                 }
                 return res.json ({
@@ -83,22 +88,25 @@ module.exports = {
             });
         },
         deleteUser: (req, res) => {
-            const data = req.body;
+            const id = req.params.id;
 
-            deleteUser (data, (err, results) => {
+            deleteUser (id, (err, results) => {
                 if (err) {
                     console.log(err);
-                    return false;
-                }
-                if (!results) {
+                    return res.status(500).json({
+                        success: 0,
+                        message: "Database error"
+                });
+            }
+            if (!results || results.affectedRows === 0) {
                     return res.json({
                         success: 0,
-                        message: "Record not Found"
+                        message: "User not Found"
                     });
                 }
                 return res.json ({
                     success: 1,
-                    message: "user deleted successfully"
+                    message: "User deleted successfully"
                 });
             });
         },
@@ -107,11 +115,15 @@ module.exports = {
             getUserByUserEmail (body.email, (err, results) => {
                 if (err) {
                     console.log (err);
-                }
+                    return res.status(500).json({
+                        success: 0,
+                        message: "Database error"
+                });
+            }
                 if (!results) {
                     return res.json ({
                         success: 0,
-                        data: "Invalid email or password"
+                        message: "Invalid email or password"
                     });
                 }
                 const result = compareSync(body.password, results.password);
@@ -128,7 +140,7 @@ module.exports = {
                 } else {
                     return res.json ({
                         success: 0,
-                        data: "Invalid email or password"
+                        message: "Invalid email or password"
                     });
                 }
             });
