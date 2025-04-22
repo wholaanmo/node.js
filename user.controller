@@ -67,6 +67,7 @@ module.exports = {
                 const salt = genSaltSync(10); 
                 body.password = hashSync (body.password, salt);
             }
+
             updateUser (body, (err, results) => {
                 if (err) {
                     console.log(err);
@@ -126,16 +127,17 @@ module.exports = {
                         message: "Invalid email or password"
                     });
                 }
-                const result = compareSync(body.password, results.password);
-                if (result) {
+                const isPasswordValid = compareSync(body.password, results.password);
+                if (isPasswordValid) {
                     results.password = undefined;
-                    const jsontoken = sign({ result: results }, "qwe1234", {
-                        expiresIn: "1h"
+                    const jsontoken = sign({ userId: results.id }, "qwe1234", {
+                        expiresIn: "1h",
                     });
                     return res.json({
                         success: 1,
                         message: "login successfully",
-                        token: jsontoken
+                        token: jsontoken,
+                        user: results, 
                     });
                 } else {
                     return res.json ({
