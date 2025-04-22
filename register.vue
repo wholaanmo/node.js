@@ -1,9 +1,53 @@
-    <script>
-    import { ref } from 'vue'
-    import axios from 'axios'
-    import { useRouter } from 'vue-router'
+<template>
+    <div class="register-bg">
+        <div class="container">
+            <div class="login-container">
+                <div class="login-form">
+                    <form @submit.prevent="registerUser">
+                        <div class="login-form-items">
+                             <span class="login-label">REGISTER</span>
     
+                        <div class="text-input-container">
+                            <label class="form-label">USERNAME</label>
+                            <input type="text" name="username" v-model="username" class="text-style" required />
+
+                            <label class="form-label">EMAIL</label>
+                            <input type="email" name="email" v-model="email" class="text-style" required />
+
+                            <label class="form-label">PASSWORD</label>
+                            <input type="password" name="password" v-model="password" class="text-style" required />
+
+                            <label class="form-label">PASSWORD CONFIRMATION</label>
+                            <input type="password" name="password_confirmation" v-model="password_confirmation" class="text-style" required />
+                        </div>
+
+                        <p v-if="serverMessage" class="error-message">{{ serverMessage }}</p>
+
+                        <button type="submit" class="login-btn">SIGN UP</button>
+                        <router-link to="/login" class="login-btn1">SIGN IN</router-link>
+                    </div>
+                </form>    
+            </div>
+        <div class="login-deco-container">
+        <div class="login-deco">
+        <span class="penny">MONEY <br> LOG</span>
+            <img src="/LOGO.png" alt="Logo Image" class="deco-image">  
+        </div>
+        </div>
+        </div>
+        </div>
+    </div>
+    </template>
+    
+    <script>
+import { ref, inject } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+
+export default {
+  setup() {
     const router = useRouter()
+    const someInjectedValue = inject('key')
     
     // Form state
     const username = ref('')
@@ -14,6 +58,15 @@
     
     // Handle registration
     const registerUser = async () => {
+      // Reset the server message before starting a new registration attempt
+      serverMessage.value = ''
+    
+      // Basic validation
+      if (!username.value || !email.value || !password.value || !password_confirmation.value) {
+        serverMessage.value = "All fields are required!"
+        return
+      }
+    
       if (password.value !== password_confirmation.value) {
         serverMessage.value = "Passwords do not match!"
         return
@@ -38,4 +91,16 @@
         serverMessage.value = "Failed to register. Check console for errors."
       }
     }
+    
+    return {
+      someInjectedValue,
+      username,
+      email,
+      password,
+      password_confirmation,
+      serverMessage,
+      registerUser,
+    }
+  }
+}
     </script>
